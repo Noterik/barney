@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Config for domain: decompression</comment>
+<entry key="throughput">MySQL</entry>
+<entry key="name">the bends</entry>
+<entry key="host"> </entry>
+<entry key="domainID">decompression</entry>
+</properties>

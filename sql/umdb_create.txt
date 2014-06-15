@@ -1,0 +1,64 @@
+# Host: moya.noterik.nl
+# Database: umdb
+# Table: 'domains'
+# 
+CREATE TABLE `domains` (
+  `id` varchar(100) NOT NULL default '',
+  `name` varchar(100) NOT NULL default '',
+  `throughput` varchar(100) NOT NULL default '',
+  `host` varchar(100) default ''
+) ENGINE=MyISAM DEFAULT CHARSET=latin1; 
+
+# Host: moya.noterik.nl
+# Database: umdb
+# Table: 'groups'
+# 
+CREATE TABLE `groups` (
+  `id` varchar(100) NOT NULL default '',
+  `domainID` varchar(100) NOT NULL default '0',
+  `name` varchar(100) NOT NULL default '',
+  PRIMARY KEY  (`id`,`domainID`),
+  UNIQUE KEY `unique` (`domainID`,`name`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1; 
+
+# Host: moya.noterik.nl
+# Database: umdb
+# Table: 'members'
+# 
+CREATE TABLE `members` (
+  `userID` varchar(30) NOT NULL default '0',
+  `groupID` varchar(100) NOT NULL default '0',
+  `domainID` varchar(100) NOT NULL default '0',
+  PRIMARY KEY  (`userID`,`groupID`,`domainID`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1; 
+
+# Host: moya.noterik.nl
+# Database: umdb
+# Table: 'tickets'
+# 
+CREATE TABLE `tickets` (
+  `domainID` varchar(100) NOT NULL default '0',
+  `userID` varchar(100) NOT NULL default '0',
+  `timeCreated` double NOT NULL default '0',
+  `expirationTime` varchar(100) NOT NULL default '',
+  `random` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`domainID`,`userID`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1; 
+
+# Host: moya.noterik.nl
+# Database: umdb
+# Table: 'users'
+# 
+CREATE TABLE `users` (
+  `domainID` varchar(100) NOT NULL default '0',
+  `id` varchar(30) NOT NULL default '',
+  `firstName` varchar(100) default '',
+  `lastName` varchar(100) default '',
+  `password` varchar(100) NOT NULL default '',
+  `email` varchar(100) default '',
+  `insertion` varchar(100) default '',
+  `birthdate` date default '1970-01-01',
+  `phone` varchar(50) default '',
+  PRIMARY KEY  (`domainID`,`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1; 
+

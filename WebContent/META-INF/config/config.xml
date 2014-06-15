@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<comment>Config for the user manager</comment>
+<entry key="db-host">c6.noterik.com</entry>
+<entry key="db-password">umpfvaD0!</entry>
+<entry key="db-user">umdb</entry>
+<entry key="db-name">umdb</entry>
+</properties>
