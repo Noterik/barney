@@ -20,11 +20,7 @@
 */
 package org.springfield.barney.homer;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -33,12 +29,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
+
+
+
 
 import org.apache.log4j.*;
 import org.dom4j.*;
+import org.springfield.barney.ServiceHandler;
 
-import com.noterik.springfield.tools.HttpHelper;
+import org.springfield.mojo.http.HttpHelper;
 
 
 public class LazyHomer implements MargeObserver {
@@ -62,6 +61,7 @@ public class LazyHomer implements MargeObserver {
 	private static LazyHomer ins;
 	private static boolean running = false;
 	static String role = "production";
+	private int retryCounter;
 
 	
 	/**
@@ -70,9 +70,13 @@ public class LazyHomer implements MargeObserver {
 	public void init(String r) {
 		rootPath = r;
 		ins = this;
-		initConfig();
-		initLogger();
+		retryCounter = 0;
 		
+		// register this springfield service
+		System.out.println("STARTING BARNEY HOMER!!!");
+		initConfig();
+		//initLogger();
+
 		try{
 			InetAddress mip=InetAddress.getLocalHost();
 			myip = ""+mip.getHostAddress();
@@ -209,37 +213,42 @@ public class LazyHomer implements MargeObserver {
 				}	
 			}
 			if (!foundmynode) {
-				LOG.info("LazyHomer : Creating my processing node "+LazyHomer.getSmithersUrl()  + "/domain/internal/service/barney/properties");
-				String os = "unknown"; // we assume windows ?
-				try{
-					  os = System.getProperty("os.name");
-				} catch (Exception e){
-					System.out.println("LazyHomer : "+e.getMessage());
-				}
+				if (retryCounter < 30) {
+					//retry 30 times (= 5 min) to handle temp smithers downtime (eg daily restarts)
+					retryCounter++;
+				} else {
+					LOG.info("LazyHomer : Creating my processing node "+LazyHomer.getSmithersUrl()  + "/domain/internal/service/barney/properties");
+					String os = "unknown"; // we assume windows ?
+					try{
+						os = System.getProperty("os.name");
+					} catch (Exception e){
+						System.out.println("LazyHomer : "+e.getMessage());
+					}
 				
-				String newbody = "<fsxml>";
-	        	newbody+="<nodes id=\""+myip+"\"><properties>";
-	        	newbody+="<name>unknown</name>";
-	        	newbody+="<status>off</status>";
-	        	newbody+="<activesmithers>"+selectedsmithers.getIpNumber()+"</activesmithers>";
-	        	newbody+="<lastseen>"+new Date().getTime()+"</lastseen>";
-	        	newbody+="<preferedsmithers>"+myip+"</preferedsmithers>";
-	        	if (isWindows()) {
-	        		newbody+="<defaultloglevel>info</defaultloglevel>";
-	        		newbody+="<temporarydirectory>c:\\springfield\\barney\\temp</temporarydirectory>";
-	        	} if (isMac()) {
-	        		newbody+="<defaultloglevel>info</defaultloglevel>";
-	        		newbody+="<temporarydirectory>/springfield/barney/temp</temporarydirectory>";
-	        	} if (isUnix()) {
-	        		newbody+="<defaultloglevel>info</defaultloglevel>";
-	        		newbody+="<temporarydirectory>/springfield/barney/temp</temporarydirectory>";
-	        	} else {
-	        		newbody+="<defaultloglevel>info</defaultloglevel>";
-	        		newbody+="<temporarydirectory>c:\\springfield\\barney\\temp</temporarydirectory>";
+					String newbody = "<fsxml>";
+					newbody+="<nodes id=\""+myip+"\"><properties>";
+					newbody+="<name>unknown</name>";
+					newbody+="<status>off</status>";
+					newbody+="<activesmithers>"+selectedsmithers.getIpNumber()+"</activesmithers>";
+					newbody+="<lastseen>"+new Date().getTime()+"</lastseen>";
+					newbody+="<preferedsmithers>"+myip+"</preferedsmithers>";
+					if (isWindows()) {
+						newbody+="<defaultloglevel>info</defaultloglevel>";
+						newbody+="<temporarydirectory>c:\\springfield\\barney\\temp</temporarydirectory>";
+					} if (isMac()) {
+						newbody+="<defaultloglevel>info</defaultloglevel>";
+						newbody+="<temporarydirectory>/springfield/barney/temp</temporarydirectory>";
+					} if (isUnix()) {
+						newbody+="<defaultloglevel>info</defaultloglevel>";
+						newbody+="<temporarydirectory>/springfield/barney/temp</temporarydirectory>";
+					} else {
+						newbody+="<defaultloglevel>info</defaultloglevel>";
+						newbody+="<temporarydirectory>c:\\springfield\\barney\\temp</temporarydirectory>";
 
-	        	}
-	        	newbody+="</properties></nodes></fsxml>";	
-				LazyHomer.sendRequest("PUT","/domain/internal/service/barney/properties",newbody,"text/xml");
+	        			}
+	        			newbody+="</properties></nodes></fsxml>";	
+	        			LazyHomer.sendRequest("PUT","/domain/internal/service/barney/properties",newbody,"text/xml");
+					}
 			}
 		} catch (Exception e) {
 			LOG.info("LazyHomer exception doc");
@@ -301,24 +310,8 @@ public class LazyHomer implements MargeObserver {
 		if (ins.checkKnown()) {
 			// we are verified (has a name other than unknown)		
 			BarneyProperties mp = barneys.get(myip);
-			/*
-			if (serv==null) serv = new EdnaServer();
-			if (mp!=null && mp.getStatus().equals("on")) {
-
-				if (!serv.isRunning()) { 
-					LOG.info("This edna will be started");
-					serv.init();
-				}
-				setLogLevel(mp.getDefaultLogLevel());
-			} else {
-				if (serv.isRunning()) {
-					LOG.info("This edna will be turned off");
-					serv.destroy();
-				} else {
-					LOG.info("This edna is not turned on, use smithers todo this for ip "+myip);
-				}
-			}
-			*/
+			
+			ServiceHandler.instance(); // start usermanager
 		}
 		}
 	}
@@ -383,7 +376,7 @@ public class LazyHomer implements MargeObserver {
 		//System.out.println("M="+method+" "+fullurl+" "+url);
 		// first try 
 		try {
-			result = HttpHelper.sendRequest(method, fullurl, body, contentType);
+			result = (HttpHelper.sendRequest(method, fullurl, body, contentType)).getResponse();
 			if (result.indexOf("<?xml")==-1) {
 				LOG.error("FAIL TYPE ONE ("+fullurl+")");
 				LOG.error("XML="+result);
@@ -403,7 +396,7 @@ public class LazyHomer implements MargeObserver {
 			getDifferentSmithers();
 			fullurl = getSmithersUrl()+url;
 			try {
-				result = HttpHelper.sendRequest(method, fullurl, body, contentType);
+				result = (HttpHelper.sendRequest(method, fullurl, body, contentType)).getResponse();
 				if (result.indexOf("<?xml")==-1) {
 					LOG.error("FAIL TYPE THREE ("+fullurl+")");
 					LOG.error("XML="+result);

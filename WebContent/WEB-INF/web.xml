@@ -34,6 +34,12 @@
 		<servlet-name>MargeServlet</servlet-name>
 		<url-pattern>/marge/*</url-pattern>
 	</servlet-mapping>
+	
+	<servlet>
+	    <servlet-name>BarneyServlet</servlet-name>
+	    <servlet-class>org.springfield.barney.servlet.BarneyServlet</servlet-class>
+	    <load-on-startup>1</load-on-startup>
+	</servlet> 
 		
 	
 	<welcome-file-list>
