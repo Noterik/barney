@@ -68,17 +68,18 @@ public class ServiceHandler implements ServiceInterface {
 		if (command.equals("createaccount")) return createAccount(params[0],params[1],params[2],params[3]);
 		if (command.equals("userexists")) return userExists(params[0],params[1]);
 		if (command.equals("validemail")) return validEmail(params[0],params[1]);
+		if (command.equals("allowed")) return AllowedDomainChecker.bartChecker(params);
 		if (command.equals("approvedaccountname")) return approvedAccountName(params[0],params[1]);
 		if (command.equals("passwordquality")) return passwordQuality(params[0],params[1]);
-		if (command.equals("sendsignupmail")) return sendSignupMail(params[0],params[1],params[2]); 
+		if (command.equals("sendsignupmail")) return sendSignupMail(params[0],params[1],params[2],params[3]); 
 		if (command.equals("tryconfirmaccount")) return tryConfirmAccount(params[0],params[1],params[2]); 
 		return null;
 	}
 	
-	private String sendSignupMail(String domain,String account,String ticketpassword) {
-		System.out.println("DOMAIN SENDMAIL="+domain+" "+account);
-		String body = "confirm account http://www.euscreenxl.eu/confirmaccount?account="+account+"&ticket="+ticketpassword;
-		SendTemplateMail.send(body);
+	private String sendSignupMail(String domain,String account,String ticketpassword,String path) {
+		//String body = "confirm account http://www.euscreenxl.eu/confirmaccount?account="+account+"&ticket="+ticketpassword;
+		// we need to feel it
+		SendTemplateMail.sendSignupMail(domain,account,ticketpassword,path);
 		return "true";
 	}
 	
@@ -194,40 +195,31 @@ public class ServiceHandler implements ServiceInterface {
 	}
 
 	
-	private String checkLogin(String domain,String account,String password) {
-		System.out.println("LOGIN CHECK3 "+domain+" "+account);
-		
+	public static String checkLogin(String domain,String account,String password) {
 		// test for salted hashes
 		try {
-			System.out.println("HASH2="+PasswordHash.createHash(password));
 								 
 			FsNode accountnode = Fs.getNode("/domain/"+domain+"/user/"+account+"/account/default");
-			System.out.println("ACCOUNTNODE="+accountnode);
 			if (accountnode!=null) {
-				System.out.println("ACCOUNT NODE="+accountnode.asXML());
 				String state = accountnode.getProperty("state");
 				if (state!=null && !state.equals("active")) {
-					System.out.println("LOGIN LOCKED");
 					return "-1";
 				}
 				String spass = accountnode.getProperty("password");
 				if (spass.equals("$shadow")) {
 					String s = ShadowFiles.getProperty("/domain/"+domain+"/user/"+account+"/account/default","password");	
-					System.out.println("Shadow password="+s);
+					//System.out.println("Shadow password="+s);
 					if (s!=null) spass = s;
 				}
 				if (PasswordHash.validatePassword(password, spass)) {
-					System.out.println("LOGIN OK");
 					return "0"; // what should we return, we don't want to leak the ticketpassword hash right ?
 				} else {
-					System.out.println("LOGIN WRONG");
 					return "-1";
 				}
 			}
 			return "-1";
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("LOGIN WRONG");
 			return "-1";		
 		}
 	}
@@ -242,6 +234,15 @@ public class ServiceHandler implements ServiceInterface {
         else
             return hex;
     }
+    
+	public String delete(String uri,String fsxml,String mimetype) {
+		return null;
+	}
 	
+	public String post(String uri,String fsxml,String mimetype) {
+		return null;
+	}
+	
+    
 	
 }
