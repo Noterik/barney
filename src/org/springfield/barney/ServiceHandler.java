@@ -197,6 +197,12 @@ public class ServiceHandler implements ServiceInterface {
 	
 	public static String checkLogin(String domain,String account,String password) {
 		// test for salted hashes
+		/*
+		if (domain.equals("linkedtv") && account.equals("admin") && password.equals("tmppas")) {
+			return "0";
+		}
+		*/
+		
 		try {
 								 
 			FsNode accountnode = Fs.getNode("/domain/"+domain+"/user/"+account+"/account/default");
