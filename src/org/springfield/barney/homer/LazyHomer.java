@@ -144,11 +144,13 @@ public class LazyHomer implements MargeObserver {
 			}
 		}
 	}
+	/*
 	if (oldsize>0) {
 		// we already had one so lets see if we need to switch to
 		// a better one.
 		getDifferentSmithers();
 	}
+	*/
 }
 
 
@@ -377,105 +379,7 @@ public class LazyHomer implements MargeObserver {
 		if (role==null) role = "production";
 		System.out.println("SERVER ROLE="+role);
 	}
-
 	
-	public synchronized static String sndRequest(String method,String url,String body,String contentType) {
-		String fullurl = getSmithersUrl()+url;
-		String result = null;
-		boolean validresult = true;
-		
-		//System.out.println("M="+method+" "+fullurl+" "+url);
-		// first try 
-		try {
-			result = (HttpHelper.sendRequest(method, fullurl, body, contentType)).getResponse();
-			if (result.indexOf("<?xml")==-1) {
-				LOG.error("FAIL TYPE ONE ("+fullurl+")");
-				LOG.error("XML="+result);
-				validresult = false;
-			}
-		} catch(Exception e) {
-			LOG.error("FAIL TYPE TWO ("+fullurl+")");
-			LOG.error("XML="+result);
-			validresult = false;
-		}
-		
-		// something is wrong retry with new server
-		while (!validresult) {
-			validresult = true;
-			// turn the current one off
-			if (selectedsmithers!=null) selectedsmithers.setAlive(false);
-			getDifferentSmithers();
-			fullurl = getSmithersUrl()+url;
-			try {
-				result = (HttpHelper.sendRequest(method, fullurl, body, contentType)).getResponse();
-				if (result.indexOf("<?xml")==-1) {
-					LOG.error("FAIL TYPE THREE ("+fullurl+")");
-					LOG.error("XML="+result);
-					validresult = false;
-				}
-			} catch(Exception e) {
-				validresult = false;
-				LOG.error("FAIL TYPE FOUR ("+fullurl+")");
-				LOG.error("XML="+result);
-			}
-		}
-		
-		LOG.debug("VALID REQUEST RESULT ("+fullurl+") ");
-		
-		return result;
-	}
-	
-	private static void getDifferentSmithers() {
-		LOG.debug("Request for new smithers");
-		// lets first find our prefered smithers.
-		BarneyProperties mp = getMyBarneyProperties();
-		String pref = mp.getPreferedSmithers();
-		SmithersProperties winner = null;
-		for(Iterator<SmithersProperties> iter = smithers.values().iterator(); iter.hasNext(); ) {
-			SmithersProperties sm = (SmithersProperties)iter.next();
-			if (sm.isAlive()) {
-				if (sm.getIpNumber().equals(pref))  {
-					winner = sm; // we can return its the prefered
-				} else if (winner==null) {
-					winner = sm; // only override if empty
-				}
-			}
-		}
-		if (winner==null) {
-			// they are all down ? ok this is tricky lets wait until one comes up
-			boolean foundone = false;
-			while (!foundone) {
-				LOG.info("All smithers seem down waiting for one to recover");
-				LazyHomer.send("INFO","/domain/internal/service/getname");
-				for(Iterator<SmithersProperties> iter = smithers.values().iterator(); iter.hasNext(); ) {
-					SmithersProperties sm = (SmithersProperties)iter.next();
-					if (sm.isAlive()) {
-						winner = sm;
-						selectedsmithers = null;
-						foundone = true;
-					}
-				} 
-				if (!foundone) {
-					try {
-						Thread.sleep(5000);
-					} catch(Exception e) {}
-				}
-			}
-	
-		}
-		
-		if (winner!=selectedsmithers) {
-			//LazyHomer.sendRequest("PUT", "/domain/internal/service/barney/nodes/"+myip+"/properties/activesmithers", winner.getIpNumber(), "text/xml");
-			ServiceInterface sm = ServiceManager.getService("smithers");
-			sm.put("/domain/internal/service/barney/nodes/"+myip+"/properties/activesmithers", winner.getIpNumber(), "text/xml");
-			if (selectedsmithers==null) {
-				LOG.info("changed to "+winner.getIpNumber()+" prefered="+pref);
-			} else {
-				LOG.info("changed from "+selectedsmithers.getIpNumber()+" to "+winner.getIpNumber()+" prefered="+pref);
-			}
-		}
-		selectedsmithers = winner;
-	}
 	
 	/**
 	 * get root path
