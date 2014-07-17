@@ -2,3 +2,9 @@
 *.class
 
 *.jar
+
+*.class
+
+*.jar
+
+*.war
