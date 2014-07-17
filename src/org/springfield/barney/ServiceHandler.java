@@ -146,35 +146,26 @@ public class ServiceHandler implements ServiceInterface {
 		System.out.println("Create account");
 		// create the needed nodes 
 		
-		// the user node (user/[account])
-		FsNode usernode = new FsNode();
-		usernode.setPath("/domain/"+domain);
-		usernode.setName("user");
-		usernode.setId(account);
-		Fs.insertNode(usernode);
+
+		FsNode usernode = new FsNode("user",account);
+		Fs.insertNode(usernode,"/domain/"+domain);
 		
 		// the account node (account/default)
-		FsNode accountnode = new FsNode();
-		accountnode.setPath("/domain/"+domain+"/user/"+account);
-		accountnode.setName("account");
-		accountnode.setId("default");
+		FsNode accountnode = new FsNode("account","default");
 		accountnode.setProperty("firstname", "unknown");
 		accountnode.setProperty("lastname", "unknown");
 		accountnode.setProperty("password", "$shadow");
 		accountnode.setProperty("phoneNum", "unknown");
 		accountnode.setProperty("email", email);
 		accountnode.setProperty("state", "waitforconfirm");
-		Fs.insertNode(accountnode);
+		Fs.insertNode(accountnode,"/domain/"+domain+"/user/"+account);
 		
 		// set the password in the shadowfile
 		setPassword(domain,account,password);
 		
 		// the ticket node (ticket/1)
-		FsNode ticketnode = new FsNode();
+		FsNode ticketnode = new FsNode("ticket","1");
 		Date now =  new Date();
-		ticketnode.setPath("/domain/"+domain+"/user/"+account+"/account/default");
-		ticketnode.setName("ticket");
-		ticketnode.setId("1");
 		ticketnode.setProperty("goal", "signup");
 		ticketnode.setProperty("creationDate",""+(now.getTime()/1000));
 		ticketnode.setProperty("expirationDate",""+(now.getTime()/1000)+3600);
@@ -184,7 +175,7 @@ public class ServiceHandler implements ServiceInterface {
         byte[] tpw = new byte[24];
         random.nextBytes(tpw);        
         String ticketpassword  = toHex(tpw);
-		Fs.insertNode(ticketnode);
+		Fs.insertNode(ticketnode,"/domain/"+domain+"/user/"+account+"/account/default");
 		try {
 			ShadowFiles.setProperty("/domain/"+domain+"/user/"+account+"/account/default/ticket/1","random",PasswordHash.createHash(ticketpassword));	
 		} catch(Exception e) {}
