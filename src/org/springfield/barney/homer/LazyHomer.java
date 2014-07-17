@@ -178,8 +178,6 @@ public class LazyHomer implements MargeObserver {
 	
 	private Boolean checkKnown() {
 		String xml = "<fsxml><properties><depth>1</depth></properties></fsxml>";
-		//String nodes = LazyHomer.sendRequest("GET","/domain/internal/service/barney/nodes",xml,"text/xml");
-		//System.out.println("NODES="+nodes);
 		ServiceInterface smithers = ServiceManager.getService("smithers");
 		if (smithers==null) return false;
 		String nodes = smithers.get("/domain/internal/service/barney/nodes",xml,"text/xml");
@@ -256,7 +254,6 @@ public class LazyHomer implements MargeObserver {
 
 	        			}
 	        			newbody+="</properties></nodes></fsxml>";	
-	        			//LazyHomer.sendRequest("PUT","/domain/internal/service/barney/properties",newbody,"text/xml");
 	        			smithers.put("/domain/internal/service/barney/properties",newbody,"text/xml");
 					}
 			}
@@ -272,7 +269,6 @@ public class LazyHomer implements MargeObserver {
 		ServiceInterface smithers = ServiceManager.getService("smithers");
 		if (smithers==null) return;
 		smithers.put("/domain/internal/service/barney/nodes/"+myip+"/properties/lastseen", ""+value, "text/xml");
-		//LazyHomer.sendRequest("PUT", "/domain/internal/service/barney/nodes/"+myip+"/properties/lastseen", ""+value, "text/xml");
 	}
 	
 

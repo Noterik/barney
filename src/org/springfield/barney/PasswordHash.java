@@ -1,3 +1,9 @@
+/* 
+* PasswordHash.java
+* 
+* included from crackstation, see license
+* 
+*/
 package org.springfield.barney;
 /** 
  * Password Hashing With PBKDF2 (http://crackstation.net/hashing-security.htm).
