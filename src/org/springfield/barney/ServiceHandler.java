@@ -88,7 +88,9 @@ public class ServiceHandler implements ServiceInterface {
 		if (command.equals("createaccount")) return createAccount(params[0],params[1],params[2],params[3]);
 		if (command.equals("userexists")) return userExists(params[0],params[1]);
 		if (command.equals("validemail")) return validEmail(params[0],params[1]);
-		if (command.equals("allowed")) return AllowedDomainChecker.bartChecker(params);
+		if (command.equals("bartallowed")) return AllowedDomainChecker.bartChecker(params);
+		if (command.equals("userallowed")) return AllowedDomainChecker.checkAllowedUser(params);
+		if (command.equals("applicationallowed")) return AllowedDomainChecker.checkAllowedApplication(params);
 		if (command.equals("approvedaccountname")) return approvedAccountName(params[0],params[1]);
 		if (command.equals("passwordquality")) return passwordQuality(params[0],params[1]);
 		if (command.equals("sendsignupmail")) return sendSignupMail(params[0],params[1],params[2],params[3]); 
