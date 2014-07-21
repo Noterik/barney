@@ -51,7 +51,6 @@ public class AllowedDomainChecker {
 		String duri = params[1];
 		String depth = params[2];
 		String account = params[3];
-		String password = params[4];
 		if (checkActions(account,"user",duri,0,actions)) {
 				return "true";
 		}
