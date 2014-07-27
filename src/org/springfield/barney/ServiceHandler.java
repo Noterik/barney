@@ -22,6 +22,7 @@ package org.springfield.barney;
 
 
 import java.util.Date;
+import java.util.HashMap;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
@@ -34,12 +35,18 @@ import org.springfield.barney.PasswordHash;
 public class ServiceHandler implements ServiceInterface {
 
 	private static ServiceHandler instance;
+	private static String spw = null;
+	private static HashMap<String,String> spws = new HashMap<String,String>();
 	
 	public String getName() {
 		return "barney";
 	}
 	
 	public ServiceHandler() {
+        SecureRandom random = new SecureRandom();
+        byte[] tpw = new byte[24];
+        random.nextBytes(tpw);        
+        spw = toHex(tpw);
 	}
 	
 	public static ServiceHandler instance() {
@@ -95,6 +102,8 @@ public class ServiceHandler implements ServiceInterface {
 		if (command.equals("passwordquality")) return passwordQuality(params[0],params[1]);
 		if (command.equals("sendsignupmail")) return sendSignupMail(params[0],params[1],params[2],params[3]); 
 		if (command.equals("tryconfirmaccount")) return tryConfirmAccount(params[0],params[1],params[2]); 
+		if (command.equals("getserviceauth")) return getServiceAuth(params[0]);
+		if (command.equals("valid_spw")) return checkValidSPW(params[0]);
 		return null;
 	}
 	
@@ -227,7 +236,6 @@ public class ServiceHandler implements ServiceInterface {
 				String spass = accountnode.getProperty("password");
 				if (spass.equals("$shadow")) {
 					String s = ShadowFiles.getProperty("/domain/"+domain+"/user/"+account+"/account/default","password");	
-					//System.out.println("Shadow password="+s);
 					if (s!=null) spass = s;
 				}
 				if (PasswordHash.validatePassword(password, spass)) {
@@ -241,6 +249,11 @@ public class ServiceHandler implements ServiceInterface {
 			e.printStackTrace();
 			return "-1";		
 		}
+	}
+	
+	private String checkValidSPW(String rspw) {
+		if (rspw.equals(spw)) return "true";
+		return "false";
 	}
 	
     private static String toHex(byte[] array)
@@ -262,6 +275,32 @@ public class ServiceHandler implements ServiceInterface {
 		return null;
 	}
 	
+	public void sendAuth() {
+		LazyHomer.send("PAUTH",LazyHomer.myip+","+spw);
+	}
+	
+	public void setServiceAuth(String a) {
+		String[] params = a.split(",");
+		spws.put(params[0],params[1]);
+	}
+	
+	private String getServiceAuth(String ipnumber) {
+		spws.remove(ipnumber); // zap the old one
+		LazyHomer.send("AUTH", ipnumber);
+		for (int i=0;i<20;i++) {
+			try {
+				Thread.sleep(100);
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+			String cpws = spws.get(ipnumber);
+			if (cpws!=null) {
+				return cpws;
+			}
+		}
+		return null;
+	}
+ 	
     
 	
 }

@@ -69,8 +69,25 @@ public class AllowedDomainChecker {
 	}
 	
 	private static boolean checkActions(String asker,String type,String duri,int depth,String actions) {
-		FsNode node = Fs.getNode(duri);
+		if (duri.endsWith("/")) duri = duri.substring(0,duri.length()-1); // remove last '/' if attached
+
+		System.out.println("DURI="+duri);
+		FsNode node = null;
+		if (Fs.isMainNode(duri)) {
+			System.out.println("MAIN");
+			int pos = duri.lastIndexOf("/");
+			if (pos!=-1) {
+				duri = duri.substring(0,pos);
+				System.out.println("MAIN2="+duri);
+			}
+			node = Fs.getNode(duri);
+		} else {
+			System.out.println("MAIN");
+		}
+		
 		if (node==null) return false;
+		
+		System.out.println("DURI2="+duri);
 		
 		// check if it has the actions we need to check, travel up if needed
 		ArrayList<String> allowedactions = node.allowedActions(asker,type);

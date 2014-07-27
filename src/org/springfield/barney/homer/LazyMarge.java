@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
+import org.springfield.barney.ServiceHandler;
 
 
 
@@ -39,7 +40,7 @@ public class LazyMarge extends Thread {
 	private static final Logger LOG = Logger.getLogger(LazyMarge.class);
 	private static boolean running = false;
 	private static Map<String, MargeObserver> observers = new HashMap<String, MargeObserver>();
-	private static enum methods { GET,POST,PUT,DELETE,INFO,TRACE,LINK; }
+	private static enum methods { GET,POST,PUT,DELETE,INFO,TRACE,LINK,AUTH,PAUTH; }
 	private static MargeTimerThread timerthread = null;
 	MulticastSocket s = null;
 	
@@ -89,6 +90,16 @@ public class LazyMarge extends Thread {
 						break;
 					case TRACE :
 						signalObservers(result[0],result[1],result[2]);
+						break;
+					case AUTH :
+						//System.out.println("INCOMING AUTH="+result[2]+" MYIP="+LazyHomer.myip);
+						if (result[2].equals(LazyHomer.myip)) {
+							ServiceHandler.instance().sendAuth();
+						}
+						break;
+					case PAUTH :
+						//System.out.println("INCOMING PAUTH="+result[2]);
+						ServiceHandler.instance().setServiceAuth(result[2]);
 						break;
 					case LINK :
 						signalObservers(result[0],result[1],result[2]);
