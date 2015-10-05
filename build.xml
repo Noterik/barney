@@ -50,17 +50,20 @@
 	  </javadoc>
 	</target>
 
-	<target name="build" depends="clean,compile">
+	<target name="build" depends="clean,compile,buildtime">
+		<loadfile property="time" srcFile="${web.dir}/build.txt"/>
 		<delete file="${build.dir}/barney.jar"/>
 		<jar jarfile="${build.dir}/barney.jar" basedir="${classes.dir}">
 			<manifest>
 				<attribute name="Built-By" value="Noterik B.V."/>
 			   	<attribute name="Main-Class" value="org.springfield.barney.restlet.SUMRestletApplication"/>
+				<attribute name="Build" value="${time}"/>
 			</manifest>
 		</jar>
 	</target>
 
 	<target name="deploy-war" depends="build">
+		<loadfile property="time" srcFile="${web.dir}/build.txt"/>
 		<war destfile="${war.dir}/barney.war" webxml="${web.dir}/WEB-INF/web.xml">
 			<lib dir="${lib.dir}">
 				<exclude name="jsp-api.jar"/>
@@ -88,10 +91,21 @@
 				<exclude name="WEB-INF/lib/com.noelios.restlet.jar"/>
 				<exclude name="WEB-INF/lib/com.noelios.restlet.ext.servlet_2.4.jar"/>
 			</fileset>
+			<manifest>
+				<attribute name="Built-By" value="Noterik B.V."/>
+				<attribute name="Build" value="${time}"/>
+			</manifest>
 		</war>
 	</target>
 	
 	<target name="deploy-local" depends="build">
 		<copy file="${build.dir}/barney.jar" todir="${local.dir}/WEB-INF/lib" />	
+	</target>
+	
+	<target name="buildtime">
+		<tstamp>
+			<format property="time" pattern="yyyy/MM/dd HH:mm:ss" unit="hour"/>
+		</tstamp>
+		<echo file="${web.dir}/build.txt">${time}</echo>
 	</target>
 </project>

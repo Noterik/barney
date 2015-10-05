@@ -8,3 +8,5 @@
 *.jar
 
 *.war
+
+WebContent/build.txt
