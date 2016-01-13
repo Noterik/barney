@@ -65,7 +65,7 @@ public class ServiceHandler implements ServiceInterface {
 			String values = uri.substring(pos+1);
 			values = values.substring(0,values.length()-1);
 			String[] params = values.split(",");
-			//System.out.println("COMMAND="+command+" VALUES="+values);
+			System.out.println("BARNEY COMMAND="+command+" VALUES="+values);
 			return handleGetCommand(command,params);
 		}
 		return null;
