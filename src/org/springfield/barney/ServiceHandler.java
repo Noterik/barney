@@ -90,9 +90,15 @@ public class ServiceHandler implements ServiceInterface {
 		return null;
 	}
 	
+
+	
 	private String handleGetCommand(String command,String[] params) {
 		if (command.equals("login")) return checkLogin(params[0],params[1],params[2]);
 		if (command.equals("createaccount")) return createAccount(params[0],params[1],params[2],params[3]);
+		if (command.equals("sendforgotmail")) return sendForgotMail(params[0],params[1],params[2]);
+		if (command.equals("setticket")) return setTicket(params[0],params[1],params[2]);
+		if (command.equals("deleteticket")) return deleteTicket(params[0],params[1]);
+		if (command.equals("checkticket")) return checkTicket(params[0],params[1],params[2]);
 		if (command.equals("userexists")) return userExists(params[0],params[1]);
 		if (command.equals("validemail")) return validEmail(params[0],params[1]);
 		if (command.equals("bartallowed")) return AllowedDomainChecker.bartChecker(params);
@@ -133,9 +139,90 @@ public class ServiceHandler implements ServiceInterface {
 		return "false";
 	}
 	
+	private String checkTicket(String domain,String account,String ticket) {
+		System.out.println("CHECK TICKET "+domain+" "+account+" *"+ticket+"*");
+		FsNode ticketnode = Fs.getNode("/domain/"+domain+"/user/"+account+"/account/default/ticket/1");
+		if (ticketnode!=null) {
+			String goal = ticketnode.getProperty("goal");
+			String random = ticketnode.getProperty("random");
+			if (random.equals("$shadow")) {
+				String sticket = ShadowFiles.getProperty("/domain/"+domain+"/user/"+account+"/account/default/ticket/1","random");	
+				System.out.println("Shadow ticket="+sticket);
+				if (sticket.equals("")) return "false";
+				
+				try {
+					if (PasswordHash.validatePassword(ticket, sticket)) {
+						// ok we not confirm the account
+						try {
+							long et = Long.parseLong(ticketnode.getProperty("expirationDate"));
+							long nt = (new Date()).getTime()/1000;
+							if (nt>et) {
+								return "false";
+							}
+						} catch (Exception e) {
+							return "false";
+						}
+						return "true";
+					}
+				} catch(Exception e) {
+					return "false";
+				}
+			}
+		}
+		return "false";
+	}
+	
 	private String passwordQuality(String domain,String password) {
 		if (password.length()<3) return "false";
 		return "true";
+	}
+	
+	
+	private String sendForgotMail(String domain,String forgotname,String path) {
+		
+		String account = forgotname; // needs to be checked
+		if (userExists(domain,account).equals("true")) {		
+			String random = setTicket(domain,account,"forgotmail");
+			SendTemplateMail.sendForgotpasswordMail(domain, account, random, path);
+			return "true";
+		} else {
+			return "false";
+		}
+	} 
+	
+	private String deleteTicket(String domain,String account) {
+		FsNode ticketnode = new FsNode("ticket","1");
+		Date now =  new Date();
+		ticketnode.setProperty("goal", "");
+		ticketnode.setProperty("creationDate","");
+		ticketnode.setProperty("expirationDate","");
+		ticketnode.setProperty("random","$shadow");
+		
+		Fs.insertNode(ticketnode,"/domain/"+domain+"/user/"+account+"/account/default");
+		try {
+			ShadowFiles.setProperty("/domain/"+domain+"/user/"+account+"/account/default/ticket/1","random","");	
+		} catch(Exception e) {}
+		return "true";
+	}
+	
+	private String setTicket(String domain,String account,String goal) {
+		FsNode ticketnode = new FsNode("ticket","1");
+		Date now =  new Date();
+		ticketnode.setProperty("goal", "signup");
+		ticketnode.setProperty("creationDate",""+(now.getTime()/1000));
+		ticketnode.setProperty("expirationDate",""+(now.getTime()/1000)+3600);
+		ticketnode.setProperty("random","$shadow");
+		
+        SecureRandom random = new SecureRandom();
+        byte[] tpw = new byte[24];
+        random.nextBytes(tpw);        
+        String ticketpassword  = toHex(tpw);
+		Fs.insertNode(ticketnode,"/domain/"+domain+"/user/"+account+"/account/default");
+		try {
+			ShadowFiles.setProperty("/domain/"+domain+"/user/"+account+"/account/default/ticket/1","random",PasswordHash.createHash(ticketpassword));	
+		} catch(Exception e) {}
+
+		return ticketpassword;
 	}
 	
 	private String validEmail(String domain,String email) {
