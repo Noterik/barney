@@ -229,5 +229,92 @@ public class SendTemplateMail {
 			}
 		}
 	}
+	
+	public static void sendShareMail(String domain,String email,String link,String path) {
+		// lets read the template 
+		String body = ""; 
+		String from = "";
+		String subject = "";
+		Boolean header = true;
+		
+		try {
+			BufferedReader file = new BufferedReader(new FileReader(path+"/data/barney/emailtemplates/share.html"));
+		    try {
+		        String line = file.readLine();
+		        
+		        while (line != null) {
+		        	if (line.indexOf("<pre>")!=-1) {
+		        		header = false;
+		        		line = file.readLine(); // extra readline to loose the <pre>
+		        	}
+		        	if  (header) {
+		        		String[] tok = line.split("=");
+		        		if (tok.length>1) {
+		        			String name = tok[0];
+		        			String value = tok[1];
+		        			if (name.equals("from")) { from = value; } else
+			        		if (name.equals("subject")) { subject = value; }
+				        	//if (name.equals("link")) { link = value; } 
+		        		}
+		        	} else {
+			        	if (line.indexOf("</pre>")==-1) { // lets also ignore the end signal
+			        		body+=line+"\n";
+			        	}
+		        	}
+		            line = file.readLine();
+		        }
+		    } finally {
+		        file.close();
+		    }
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		// so lets to some replace actions
+		body = body.replace("{link}",link);
+		
+		if (LazyHomer.emailType.equals("amazon")) {
+
+			try {
+				Properties props = System.getProperties();
+				props.put("mail.transport.protocol", "smtp");
+				props.put("mail.smtp.port", 25); 
+				props.put("mail.smtp.auth", "true");
+				props.put("mail.smtp.starttls.enable", "true");
+				props.put("mail.smtp.starttls.required", "true");
+				Session session = Session.getDefaultInstance(props);
+				Message message = new MimeMessage(session);
+				message.setFrom(new InternetAddress(from));
+				InternetAddress to[] = new InternetAddress[1];
+				to[0] = new InternetAddress(email);
+				message.setRecipients(Message.RecipientType.TO, to);
+				message.setSubject(subject);
+				message.setContent(body, "text/plain");
+				Transport transport = session.getTransport();
+				transport.connect(LazyHomer.emailSMTPHost,LazyHomer.emailSMTPAccount,LazyHomer.emailSMTPPassword);
+				transport.sendMessage(message, message.getAllRecipients());
+				transport.close();
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		} else if (LazyHomer.emailType.equals("direct")) {
+			try {
+				Context initCtx = new InitialContext();
+				Context envCtx = (Context) initCtx.lookup("java:comp/env");
+				Session session = (Session) envCtx.lookup("mail/Session");
+
+				Message message = new MimeMessage(session);
+				message.setFrom(new InternetAddress(from));
+				InternetAddress to[] = new InternetAddress[1];
+				to[0] = new InternetAddress(email);
+				message.setRecipients(Message.RecipientType.TO, to);
+				message.setSubject(subject);
+				message.setContent(body, "text/plain");
+				Transport.send(message);
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 }

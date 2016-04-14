@@ -95,7 +95,7 @@ public class ServiceHandler implements ServiceInterface {
 	private String handleGetCommand(String command,String[] params) {
 		if (command.equals("login")) return checkLogin(params[0],params[1],params[2]);
 		if (command.equals("createaccount")) return createAccount(params[0],params[1],params[2],params[3]);
-		if (command.equals("sendforgotmail")) return sendForgotMail(params[0],params[1],params[2]);
+		if (command.equals("sendsharemail")) return sendShareMail(params[0],params[1],params[2],params[3]);
 		if (command.equals("setticket")) return setTicket(params[0],params[1],params[2]);
 		if (command.equals("deleteticket")) return deleteTicket(params[0],params[1]);
 		if (command.equals("checkticket")) return checkTicket(params[0],params[1],params[2]);
@@ -189,6 +189,12 @@ public class ServiceHandler implements ServiceInterface {
 			return "false";
 		}
 	} 
+	
+	private String sendShareMail(String domain,String email,String link,String path) {
+			SendTemplateMail.sendShareMail(domain, email, link, path);
+			return "true";
+	}
+	
 	
 	private String deleteTicket(String domain,String account) {
 		FsNode ticketnode = new FsNode("ticket","1");
