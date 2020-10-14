@@ -30,10 +30,13 @@ import org.springfield.barney.homer.*;
 import org.springfield.fs.Fs;
 import org.springfield.fs.FsNode;
 import org.springfield.mojo.interfaces.*;
+import org.apache.log4j.Logger;
 import org.springfield.barney.PasswordHash;
 
 public class ServiceHandler implements ServiceInterface {
 
+	private static Logger LOG = Logger.getLogger(ServiceHandler.class);
+	
 	private static ServiceHandler instance;
 	private static String spw = null;
 	private static HashMap<String,String> spws = new HashMap<String,String>();
@@ -65,7 +68,9 @@ public class ServiceHandler implements ServiceInterface {
 			String values = uri.substring(pos+1);
 			values = values.substring(0,values.length()-1);
 			String[] params = values.split(",");
-			System.out.println("BARNEY COMMAND="+command+" VALUES="+values);
+			LOG.debug("BARNEY COMMAND="+command);
+			//we don't want to expose possible passwords!!!
+			//LOG.trace("VALUES="+values);
 			return handleGetCommand(command,params);
 		}
 		return null;
@@ -89,8 +94,6 @@ public class ServiceHandler implements ServiceInterface {
 		if (command.equals("setpassword")) return setPassword(params[0],params[1],value); 
 		return null;
 	}
-	
-
 	
 	private String handleGetCommand(String command,String[] params) {
 		if (command.equals("login")) return checkLogin(params[0],params[1],params[2]);
@@ -311,20 +314,12 @@ public class ServiceHandler implements ServiceInterface {
 
 	
 	public static String checkLogin(String domain,String account,String password) {
-		// test for salted hashes
-		/*
-		if (domain.equals("linkedtv") && account.equals("admin") && password.equals("tmppas")) {
-			return "0";
-		}
-		*/
-		
-		try {
-								 
+		try {		 
 			FsNode accountnode = Fs.getNode("/domain/"+domain+"/user/"+account+"/account/default");
 			if (accountnode!=null) {
 				String state = accountnode.getProperty("state");
 				if (state!=null && !state.equals("active")) {
-					return "-1";
+					return "-2";
 				}
 				String spass = accountnode.getProperty("password");
 				if (spass.equals("$shadow")) {
