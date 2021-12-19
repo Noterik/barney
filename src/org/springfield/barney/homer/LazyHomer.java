@@ -30,18 +30,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-
-
-
-
-
 import org.apache.log4j.*;
 import org.dom4j.*;
 import org.springfield.barney.ServiceHandler;
 import org.springfield.mojo.http.HttpHelper;
 import org.springfield.mojo.interfaces.ServiceInterface;
 import org.springfield.mojo.interfaces.ServiceManager;
-
 
 public class LazyHomer implements MargeObserver {
 	
@@ -430,8 +424,6 @@ public class LazyHomer implements MargeObserver {
     	// get logging path
     	String logPath = LazyHomer.getRootPath().substring(0,LazyHomer.getRootPath().indexOf("webapps"));
 		logPath += "logs/barney/barney.log";	
-		
-
 		
 		try {
 			// default layout
