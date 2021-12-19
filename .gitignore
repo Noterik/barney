@@ -10,3 +10,4 @@
 *.war
 
 WebContent/build.txt
+*.class
