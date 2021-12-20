@@ -59,9 +59,41 @@ public class ShadowFiles {
 			File md = new File(writedir);
 			md.mkdirs();
 			
-		    PrintWriter writer = new PrintWriter(writedir+"/properties.txt", "UTF-8");
-		    writer.println(fieldname+"="+value);
-		    writer.close();
+		    PrintWriter writer = new PrintWriter(writedir+"/properties.tmp", "UTF-8");
+
+			BufferedReader file = new BufferedReader(new FileReader("/springfield/barney/data/shadowfiles"+path+"/properties.txt"));
+		    try {
+		        String prop = file.readLine();
+
+		        while (prop != null) {
+		        	int pos = prop.indexOf("=");
+		        	if (pos!=-1) {
+		        		String ofield = prop.substring(0,pos);
+		        		String ovalue = prop.substring(pos+1);
+		        		if (ofield.equals(fieldname)) {
+		        			// do nothing we will add at the end
+		        		} else {
+		        			writer.println(ofield+"="+ovalue);
+		        		}
+		        	}
+		            prop = file.readLine();
+		        }
+		    } finally {
+		        file.close();
+		    }
+		    
+		    
+		   // we removed the old one if needed add the new one.
+		   writer.println(fieldname+"="+value);
+		   writer.close();
+		   
+		   // delete old file
+		   File oldf = new File("/springfield/barney/data/shadowfiles"+path+"/properties.txt");
+		   oldf.delete();
+		   // rename tmpfile;
+		   File tmpf = new File("/springfield/barney/data/shadowfiles"+path+"/properties.tmp");
+		   tmpf.renameTo(new File("/springfield/barney/data/shadowfiles"+path+"/properties.txt"));
+		   
 		} catch(Exception e) {}
 		return null;
 	}

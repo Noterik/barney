@@ -61,7 +61,6 @@ public class ServiceHandler implements ServiceInterface {
 	}
 	
 	public String get(String uri,String fsxml,String mimetype) {
-		//System.out.println("BARNEY GET="+uri);
 		int pos = uri.indexOf("(");
 		if (pos!=-1) {
 			String command = uri.substring(0,pos);
@@ -74,14 +73,12 @@ public class ServiceHandler implements ServiceInterface {
 	}
 	
 	public String put(String uri,String value,String mimetype) {
-		//System.out.println("BARNEY PUT="+uri);
 		int pos = uri.indexOf("(");
 		if (pos!=-1) {
 			String command = uri.substring(0,pos);
 			String values = uri.substring(pos+1);
 			values = values.substring(0,values.length()-1);
 			String[] params = values.split(",");
-			//System.out.println("COMMAND="+command+" VALUES="+values);
 			return handlePutCommand(command,params,value);
 		}
 		return null;
@@ -89,6 +86,7 @@ public class ServiceHandler implements ServiceInterface {
 	
 	private String handlePutCommand(String command,String[] params,String value) {
 		if (command.equals("setpassword")) return setPassword(params[0],params[1],value); 
+		if (command.equals("settotpcode")) return setTotpCode(params[0],params[1],value); 
 		return null;
 	}
 	
@@ -99,6 +97,7 @@ public class ServiceHandler implements ServiceInterface {
 		if (command.equals("setticket")) return setTicket(params[0],params[1],params[2]);
 		if (command.equals("deleteticket")) return deleteTicket(params[0],params[1]);
 		if (command.equals("checkticket")) return checkTicket(params[0],params[1],params[2]);
+		if (command.equals("gettotpcode")) return getTotpCode(params[0],params[1]);
 		if (command.equals("userexists")) return userExists(params[0],params[1]);
 		if (command.equals("validemail")) return validEmail(params[0],params[1]);
 		if (command.equals("bartallowed")) return AllowedDomainChecker.bartChecker(params);
@@ -121,7 +120,6 @@ public class ServiceHandler implements ServiceInterface {
 	}
 	
 	private String setPassword(String domain,String account,String password) {
-		//System.out.println("BARNEY SETPASSWORD "+domain+" "+account);
 		try {
 			ShadowFiles.setProperty("/domain/"+domain+"/user/"+account+"/account/default","password",PasswordHash.createHash(password));	
 
@@ -139,15 +137,28 @@ public class ServiceHandler implements ServiceInterface {
 		return "false";
 	}
 	
+	private String getTotpCode(String domain,String account) {
+		String totp_code = ShadowFiles.getProperty("/domain/"+domain+"/user/"+account+"/account/default","totp_code");	
+		return totp_code;
+	}
+	
+	private String setTotpCode(String domain,String account,String code) {
+		try {
+			ShadowFiles.setProperty("/domain/"+domain+"/user/"+account+"/account/default","totp_code",code);	
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	
 	private String checkTicket(String domain,String account,String ticket) {
-		//System.out.println("CHECK TICKET "+domain+" "+account+" *"+ticket+"*");
 		FsNode ticketnode = Fs.getNode("/domain/"+domain+"/user/"+account+"/account/default/ticket/1");
 		if (ticketnode!=null) {
 			String goal = ticketnode.getProperty("goal");
 			String random = ticketnode.getProperty("random");
 			if (random.equals("$shadow")) {
 				String sticket = ShadowFiles.getProperty("/domain/"+domain+"/user/"+account+"/account/default/ticket/1","random");	
-				//System.out.println("Shadow ticket="+sticket);
 				if (sticket.equals("")) return "false";
 				
 				try {
@@ -247,7 +258,6 @@ public class ServiceHandler implements ServiceInterface {
 	}
 	
 	private String createAccount(String domain,String account,String email,String password) {
-		//System.out.println("Create account");
 		// create the needed nodes 
 		
 
@@ -288,14 +298,12 @@ public class ServiceHandler implements ServiceInterface {
 	}
 	
 	private String tryConfirmAccount(String domain,String account,String ticket) {
-		//System.out.println("CONFIRM CHECK "+domain+" "+account+" *"+ticket+"*");
 		FsNode ticketnode = Fs.getNode("/domain/"+domain+"/user/"+account+"/account/default/ticket/1");
 		if (ticketnode!=null) {
 			String goal = ticketnode.getProperty("goal");
 			String random = ticketnode.getProperty("random");
 			if (random.equals("$shadow")) {
 				String sticket = ShadowFiles.getProperty("/domain/"+domain+"/user/"+account+"/account/default/ticket/1","random");	
-				//System.out.println("Shadow ticket="+sticket);
 				try {
 					if (PasswordHash.validatePassword(ticket, sticket)) {
 						// ok we not confirm the account
@@ -357,7 +365,6 @@ public class ServiceHandler implements ServiceInterface {
 	}
 	
 	public String post(String uri,String fsxml,String mimetype) {
-		//System.out.println("LOU POST TO APP? = "+uri+" "+fsxml);
 		return null;
 	}
 	
