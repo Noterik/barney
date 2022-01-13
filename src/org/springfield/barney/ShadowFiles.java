@@ -30,7 +30,8 @@ public class ShadowFiles {
 	
 	protected static String getProperty(String path,String fieldname) {
 		try {
-		BufferedReader file = new BufferedReader(new FileReader("/springfield/barney/data/shadowfiles"+path+"/properties.txt"));
+			BufferedReader file = new BufferedReader(new FileReader("/springfield/barney/data/shadowfiles"+path+"/properties.txt"));
+
 		    try {
 		        String prop = file.readLine();
 
@@ -59,10 +60,18 @@ public class ShadowFiles {
 			File md = new File(writedir);
 			md.mkdirs();
 			
+			File cf = new File("/springfield/barney/data/shadowfiles"+path+"/properties.txt");
+			if (!cf.exists()) {
+				// ok its a new file lets create it
+			    PrintWriter writer = new PrintWriter("/springfield/barney/data/shadowfiles"+path+"/properties.txt", "UTF-8");
+				writer.println(fieldname+"="+value);
+				writer.close();
+				return null;
+			}
+			
 		    PrintWriter writer = new PrintWriter(writedir+"/properties.tmp", "UTF-8");
-
 			BufferedReader file = new BufferedReader(new FileReader("/springfield/barney/data/shadowfiles"+path+"/properties.txt"));
-		    try {
+			try {
 		        String prop = file.readLine();
 
 		        while (prop != null) {
